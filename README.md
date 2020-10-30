@@ -1,5 +1,8 @@
 # ELCA Challenge PolyHACK 2020
 
+## Image
+![ELCA Challenge](challenge_header.png)
+
 ## Title
 Traffic optimization with real-time simulation
 
