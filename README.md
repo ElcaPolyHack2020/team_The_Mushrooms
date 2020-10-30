@@ -1,5 +1,8 @@
 # ELCA Challenge PolyHACK 2020
 
+## Title
+Traffic optimization with real-time simulation
+
 ## Short Description
 As the people and vehicle density in the city continuously grows, traffic optimizations are getting more and more important.
 In this challenge, you will try to optimize a traffic problem with new ways with the help of a simulator.
