@@ -43,22 +43,47 @@ def main():
 
     # Create a bus for the persons
     bus_index = 0
+    bus_depot_start_edge = '744377000#0'
+    bus_depot_end_edge = '521059831#0'
     for person in people:
         bus_id = f'bus_{bus_index}'
         bus_index += 1
+
         traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
-        traci.vehicle.setVia(bus_id, person.edge_from)
+        traci.vehicle.setRoute(bus_id, [bus_depot_start_edge])
+        
         traci.vehicle.changeTarget(bus_id, person.edge_from)
         traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_from, pos=person.position_from, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+        
+
         traci.vehicle.setRoute(bus_id, [person.edge_from])
         traci.vehicle.changeTarget(bus_id, person.edge_to)
         traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_to, pos=person.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+        
+
+        #traci.vehicle.changeTarget(bus_id, bus_depot_end_edge)
+
+        
+        
+
+        #traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
+        #traci.vehicle.setRoute(bus_id, ['744377000#0'])
+        #traci.vehicle.setVia(bus_id, person.edge_from)
+        #traci.vehicle.changeTarget(bus_id, person.edge_from)
+        #traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_from, pos=person.position_from, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+        ##traci.vehicle.setRoute(bus_id, [person.edge_from])
+        #traci.vehicle.changeTarget(bus_id, person.edge_to)
+        #traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_to, pos=person.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+        #traci.vehicle.changeTarget(bus_id, '521059831#0')
+
+    traci.vehicle.subscribe('bus_0', (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION, tc.VAR_POSITION , tc.VAR_NEXT_STOPS ))
 
     step = 0
     while step < 1500:
         traci.simulationStep()
         sleep(0.02)
         step += 1
+        #print(traci.vehicle.getSubscriptionResults('bus_0'))
 
     traci.close()
 
