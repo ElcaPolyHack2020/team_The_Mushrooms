@@ -19,29 +19,113 @@ import traci.constants as tc
 
 def main():
 
-    # number of simulation step (24 h * 60 min * 60 s = 86400 steps)
+    ######################################################################
+    # Paramters
+
+    # number of simulation step (max. value is 86400 steps = 24 h * 60 min * 60 s)
     simulation_steps = 86400
     # sleep time between 2 simulation step. no sleep is set to 0.0
     sleep_time = 0.01
 
     # seed and scale factor for creating pedestrians
     pedestrians_seed = 30
-    pedestrians_scale_factor = 10.0
+    pedestrians_scale_factor = 2.0
+    pedestrians_until_step = simulation_steps # create pedestrians up until this step
 
+    # location of the sumocfg file
+    sumocfg_file = r"..\..\trafficmap\aarhus\osm.sumocfg"
     # location of the XML file containing the city network
     network_xml_file = r'..\..\trafficmap\aarhus\osm.net.xml'
 
-    if not os.path.exists('./logs'):
-        os.makedirs('./logs')
+    # logfiles
+    logs_folder = './logs/'
+    sumo_log_file = logs_folder + 'sumo.log'
+    traci_log_file = logs_folder + 'traci.log'
+    delete_logs_at_start = False
+
+    ######################################################################
+    # Setup
+
+    clean_logs(logs_folder=logs_folder, sumo_log_file=sumo_log_file, traci_log_file=traci_log_file, delete_logs_at_start=delete_logs_at_start)
+    start_traci_simulation(sumocfg_file=sumocfg_file, sumo_log_file=sumo_log_file, traci_log_file=traci_log_file)
+    pedestrians = add_pedestrians(seed=pedestrians_seed, scale_factor=pedestrians_scale_factor, net_xml_file=network_xml_file, max_steps=pedestrians_until_step)
+
+    ######################################################################
+
+    # Create a bus for the persons
+    bus_index = 0
+    bus_depot_start_edge = '744377000#0'
+    bus_depot_end_edge = '521059831#0'
+    for person in pedestrians:
+        bus_id = f'bus_{bus_index}'
+        bus_index += 1
+
+        try:
+            traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=person.depart + 240.0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
+            traci.vehicle.setRoute(bus_id, [bus_depot_start_edge])
+            
+            traci.vehicle.changeTarget(bus_id, person.edge_from)
+            traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_from, pos=person.position_from, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+            
+
+            traci.vehicle.setRoute(bus_id, [person.edge_from])
+            traci.vehicle.changeTarget(bus_id, person.edge_to)
+            traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_to, pos=person.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+        
+
+            #traci.vehicle.changeTarget(bus_id, bus_depot_end_edge)
+
+
+            #traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
+            #traci.vehicle.setRoute(bus_id, ['744377000#0'])
+            #traci.vehicle.setVia(bus_id, person.edge_from)
+            #traci.vehicle.changeTarget(bus_id, person.edge_from)
+            #traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_from, pos=person.position_from, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+            ##traci.vehicle.setRoute(bus_id, [person.edge_from])
+            #traci.vehicle.changeTarget(bus_id, person.edge_to)
+            #traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_to, pos=person.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
+            #traci.vehicle.changeTarget(bus_id, '521059831#0')
+
+        except traci.exceptions.TraCIException as err:
+            print("TraCIException: {0}".format(err))
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+
+    traci.vehicle.subscribe('bus_0', (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION, tc.VAR_POSITION , tc.VAR_NEXT_STOPS ))
+
+    step = 0
+    while step <= simulation_steps:
+        traci.simulationStep()
+        if sleep_time > 0: 
+            sleep(sleep_time)
+        step += 1
+        #print(traci.vehicle.getSubscriptionResults('bus_0'))
+
+    traci.close()
+
+    ######################################################################
+
+
+
+def clean_logs(logs_folder: str, sumo_log_file: str, traci_log_file: str, delete_logs_at_start: bool):
+    if not os.path.exists(logs_folder):
+        os.makedirs(logs_folder)
+    if delete_logs_at_start:
+        if os.path.exists(sumo_log_file):
+            os.remove(sumo_log_file)
+        if os.path.exists(traci_log_file):
+            os.remove(traci_log_file)
     
+
+def start_traci_simulation(sumocfg_file: str, sumo_log_file: str, traci_log_file: str):
     sumoBinary = os.path.join(os.environ['SUMO_HOME'], 'bin', 'sumo-gui')
-    sumoCmd = [sumoBinary, "-c", r"..\..\trafficmap\aarhus\osm.sumocfg", "--log", "./logs/sumo.log"]
+    sumoCmd = [sumoBinary, "-c", sumocfg_file, "--log", sumo_log_file]
+    traci.start(sumoCmd, traceFile=traci_log_file)
 
-    traci.start(sumoCmd, traceFile='./logs/traci.log')
+def add_pedestrians(seed: int, scale_factor: float, net_xml_file: str, max_steps: int):
+    pedestrians = generate_random_people(seed=seed, scale_factor=scale_factor, net_xml_file=net_xml_file, max_steps=max_steps)
 
-    people = generate_random_people(seed=pedestrians_seed, scale_factor=pedestrian_scale_factor, net_xml_file=network_xml_file)
-
-    for person in people:
+    for person in pedestrians:
         id = person.id
         edge_from = person.edge_from
         edge_to = person.edge_to
@@ -56,55 +140,9 @@ def main():
         waitingStage = traci.simulation.Stage(type=tc.STAGE_WAITING, edges=[edge_to], travelTime=200, description="Arrived at destination")
         traci.person.appendStage(id, waitingStage)
 
-    # Create a bus for the persons
-    bus_index = 0
-    bus_depot_start_edge = '744377000#0'
-    bus_depot_end_edge = '521059831#0'
-    for person in people:
-        bus_id = f'bus_{bus_index}'
-        bus_index += 1
+    return pedestrians
 
-        traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
-        traci.vehicle.setRoute(bus_id, [bus_depot_start_edge])
-        
-        traci.vehicle.changeTarget(bus_id, person.edge_from)
-        traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_from, pos=person.position_from, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
-        
-
-        traci.vehicle.setRoute(bus_id, [person.edge_from])
-        traci.vehicle.changeTarget(bus_id, person.edge_to)
-        traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_to, pos=person.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
-        
-
-        #traci.vehicle.changeTarget(bus_id, bus_depot_end_edge)
-
-        
-        
-
-        #traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
-        #traci.vehicle.setRoute(bus_id, ['744377000#0'])
-        #traci.vehicle.setVia(bus_id, person.edge_from)
-        #traci.vehicle.changeTarget(bus_id, person.edge_from)
-        #traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_from, pos=person.position_from, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
-        ##traci.vehicle.setRoute(bus_id, [person.edge_from])
-        #traci.vehicle.changeTarget(bus_id, person.edge_to)
-        #traci.vehicle.setStop(vehID=bus_id, edgeID=person.edge_to, pos=person.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
-        #traci.vehicle.changeTarget(bus_id, '521059831#0')
-
-    traci.vehicle.subscribe('bus_0', (tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION, tc.VAR_POSITION , tc.VAR_NEXT_STOPS ))
-
-    step = 0
-    while step <= simulation_steps:
-        traci.simulationStep()
-        if sleep_time > 0: 
-            sleep(sleep_time)
-        step += 1
-        #print(traci.vehicle.getSubscriptionResults('bus_0'))
-
-    traci.close()
-
-
-def generate_random_people(seed: int, scale_factor: float, net_xml_file: str):
+def generate_random_people(seed: int, scale_factor: float, net_xml_file: str, max_steps: int):
     tree = ET.parse(net_xml_file)
     root = tree.getroot()
 
@@ -125,7 +163,10 @@ def generate_random_people(seed: int, scale_factor: float, net_xml_file: str):
     for pedestrian_weight in pedestrian_weights:
         t0 = pedestrian_weight.t0
         t1 = pedestrian_weight.t1
-        weight = pedestrian_weight.weight * scale_factor
+        weight = round(pedestrian_weight.weight * scale_factor)
+
+        if t0 >= max_steps:
+            continue
         
         count = 0
         while count < weight:
