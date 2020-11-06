@@ -25,3 +25,39 @@ There is a python-based library available to interact with the simulation in rea
 Read out information from the pedestrians with the given API and find out who wants to travel where.
 Generate buses which can fulfill the travel needs of the pedestrians.
 Optimize the public transport routes in various ways and try to transport as many pedestrians as possible in the shortest time possible without overloading the traffic.
+
+#### Rules
+- It's allowed to use any number of buses for this
+- Capacity of the buses is given
+- max speed of the buses is given
+- buses may stop at any place
+- passengers just enter the bus at the position where they wait 
+  and leave the bus only when it stops at their destination position.
+  
+#### rating
+The challenge is solved best in an incremental way. The rating criterias depends on the level reached.
+
+##### Level 1
+The goal here is to ensure that we transport as much passenger as possible and fullfill the needs with a minimal amount of buses of the same capacity.
+The score will be calculated based on:
+- number of buses
+- number of passengers not transported
+
+##### Level 2
+The goal is here to reduce the number of kilometers driven by all the buses in total and minimize again the number of buses.
+The score will be calculated based on:
+- number of buses
+- kilometers driven by all buses
+- total wait time of all transported passengers
+- number of passengers not transported
+- bonus for level2
+
+##### Level 3
+In addition to level 2, we need to minimize the total capacity of all buses in addition. Therefore, this level allows to use smaller bus sizes as well.
+The score will be calculated based on:
+- number of buses
+- kilometers driven by all buses
+- total wait time of all transported passengers
+- number of passengers not transported
+- total capacity of all buses
+- bonus for level3
