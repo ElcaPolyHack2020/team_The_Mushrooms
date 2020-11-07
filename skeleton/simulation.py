@@ -7,7 +7,8 @@ class Simulation:
     def __init__(self, simulation_steps, sleep_time, pedestrians, bus_depot_start_edge, bus_depot_end_edge):
         self.simulation_steps = simulation_steps
         self.sleep_time = sleep_time
-        self.pedestrians = pedestrians
+        self.pedestrians = sorted(pedestrians,key=lambda x:pedestrians.depart)
+        self.list_edge_from = [x.edge_from for x in pedestrians]
         self.bus_depot_start_edge = bus_depot_start_edge
         self.bus_depot_end_edge = bus_depot_end_edge
 
@@ -27,7 +28,18 @@ class Simulation:
 
             try:
                 traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=person.depart + 0.0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
-                traci.vehicle.setRoute(bus_id, [self.bus_depot_start_edge])
+                route=[]
+                route.append(self.bus_depot_start_edge)
+                #traci.vehicle.setRoute(bus_id, [self.bus_depot_start_edge])
+                first_route= traci.simulation.findRoute(self.bus_depot_start_edge, person.edge_from).edges
+                for edge in first_route:
+                    try:
+                        index_pedestrian=self.list_edge_from.index(edge)
+                        if(traci.simulation.getCurrentTime()>=pedestrians[index_pedestrian].depart):
+                            stops.append(pedestrians[index_pedestrian].edge_from)
+                    except:
+                        continue
+                        
                 
                 #traci.vehicle.changeTarget(bus_id, self.bus_depot_start_edge)
                 
