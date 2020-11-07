@@ -52,7 +52,13 @@ class Simulation:
         traci.vehicle.setStop(vehID=str(bus_id), edgeID=p.edge_to, pos=p.position_to, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
         
     def run(self):
-        #self.pedestrians = sorted(self.pedestrians, key = lambda x: x.depart)
+        #list not sorted by defaul!
+        self.pedestrians = sorted(self.pedestrians, key = lambda x: x.depart)
+        own_id = 0
+        for ped in self.pedestrians:
+            ped.id = "person_" + str(own_id)
+            own_id += 1
+
         # Create a bus for the persons
         '''
         bus_index = 0
