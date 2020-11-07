@@ -29,12 +29,12 @@ Optimize the public transport routes in various ways and try to transport as man
 #### Rules
 - It's allowed to use any number of buses for this
 - Capacity of the buses is given
-- max speed of the buses is given
-- buses may stop at any place
-- passengers just enter the bus at the position where they wait 
-  and leave the bus only when it stops at their destination position.
+- Max speed of the buses is given
+- Buses may stop at any place
+- Buses must enter and leave the simulation at the predefined bus depot locations.
+- Passengers just enter the bus at the position where they wait and leave the bus only when it stops at their destination position.
   
-#### rating
+#### Rating
 The challenge is solved best in an incremental way. The rating criterias depends on the level reached.
 
 ##### Level 1
