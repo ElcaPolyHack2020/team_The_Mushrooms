@@ -5,7 +5,7 @@ import random
 import csv
 
 #SUMO_HOME
-os.environ["SUMO_HOME"] = r"C:\Temp\sumo-win64-git\sumo-git"
+os.environ["SUMO_HOME"] = r"/usr/local/opt/sumo/share/sumo/"
 
 # Add the traci python library to the tools path
 if 'SUMO_HOME' in os.environ:
@@ -31,14 +31,14 @@ def main():
     sleep_time = 0.01
 
     # seed and scale factor for creating pedestrians
-    pedestrians_seed = 30
-    pedestrians_scale_factor = 10.0
+    pedestrians_seed = 20
+    pedestrians_scale_factor = 1.0
     pedestrians_until_step = simulation_steps # create pedestrians up until this step
 
     # location of the sumocfg file
-    sumocfg_file = r"..\..\trafficmap\aarhus\osm.sumocfg"
+    sumocfg_file = r"../../trafficmap/aarhus/osm.sumocfg"
     # location of the XML file containing the city network
-    network_xml_file = r'..\..\trafficmap\aarhus\osm.net.xml'
+    network_xml_file = r'../../trafficmap/aarhus/osm.net.xml'
 
     # logfiles
     logs_folder = './logs/'
