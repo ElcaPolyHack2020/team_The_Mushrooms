@@ -83,34 +83,45 @@ class Simulation:
     def run(self):
         #list not sorted by default!
         self.pedestrians = sorted(self.pedestrians, key = lambda x: x.depart)
-            
-        optimize = True # set to False for faster program (still takes some minutes)
-        n_skip = 3 # Number of buses in beginning not to optimize, cause they may arrive before passenger spawn
+        
+        
+        #set to False for faster program (still takes some minutes)
+        optimize = True # whether to optimize bus routing
+
+        #set to small number for faster program
         n_pickup = 4 # Number of passengers to deliver per bus
+        #Warning: do not both set optimize to True and n_pickup to a high number
+        #because then running time is multiplied with (n_pickup)! (n factorial)
 
         pos = 0
         bus_n = 0
         while pos < len(self.pedestrians):
-            to_id = min(pos + n_pickup, len(self.pedestrians))
+            to_id = min(pos + n_pickup, len(self.pedestrians)) #Exclusive
             bus_id = "bus_" + str(bus_n)
 
-            if optimize and pos >= n_skip:
-                best_perm = range(0, (to_id-pos)) #default
+            if optimize:
+                best_perm = range(0, (to_id-pos)) #default (in depart order)
                 best_len = 1000000000
-                #Compute best permutation
-                for perm in list(itertools.permutations(range(0, (to_id-pos)))): #Try all permutations for bus
-                    cur_len = 0
-                    p = self.pedestrians[pos + perm[0]]
-                    cur_len += self.new_bus_len(p)
-                    for p_id in range(1, (to_id-pos)):              
-                        e_before = self.pedestrians[pos + perm[p_id - 1]].edge_to
-                        p = self.pedestrians[pos + perm[p_id]]
-                        cur_len += self.add_pers_route_len(p, e_before)
-                        if p_id == (to_id-pos)-1:
-                            cur_len += self.bye_bus_len(p.edge_to)
-                    if cur_len < best_len: #better permutation found
-                        best_len = cur_len
-                        best_perm = perm
+                #Only try optimizing if there is no risk of arriving before passenger spawn
+                min_pers_dist = 1000000000
+                for p_id in range(pos, to_id):
+                    p = self.pedestrians[p_id]
+                    min_pers_dist = min(min_pers_dist, traci.simulation.findRoute(p.edge_from, p.edge_to).travelTime)
+                if min_pers_dist * 0.8 > self.pedestrians[to_id - 1].depart - self.pedestrians[pos].depart: #No risk
+                    #Compute best permutation
+                    for perm in list(itertools.permutations(range(0, (to_id-pos)))): #Try all permutations for bus
+                        cur_len = 0
+                        p = self.pedestrians[pos + perm[0]]
+                        cur_len += self.new_bus_len(p)
+                        for p_id in range(1, (to_id-pos)):              
+                            e_before = self.pedestrians[pos + perm[p_id - 1]].edge_to
+                            p = self.pedestrians[pos + perm[p_id]]
+                            cur_len += self.add_pers_route_len(p, e_before)
+                            if p_id == (to_id-pos)-1:
+                                cur_len += self.bye_bus_len(p.edge_to)
+                        if cur_len < best_len: #better permutation found
+                            best_len = cur_len
+                            best_perm = perm
 
                 #Use best permutation
                 p = self.pedestrians[pos + best_perm[0]]
