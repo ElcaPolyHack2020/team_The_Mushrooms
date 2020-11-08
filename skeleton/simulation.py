@@ -93,10 +93,13 @@ class Simulation:
         optimize = True # whether to optimize bus routing
 
         # set to small number for faster program
-        n_pickup = 4 # Number of passengers to deliver per bus
+        n_pickup = 4 # number of passengers to deliver per bus
         # Warning: do not both set optimize to True and n_pickup to a high number,
         # because then running time is multiplied with (n_pickup)! (n factorial)
-        # Recommendation: don't simulate entire day for faster startup
+        #
+        # If optimize is False, runtime is quadratic in n_pickup
+        #
+        # In any case startup is faster when reducing simulation_steps
         ######################################################################
 
         pos = 0
