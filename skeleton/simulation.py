@@ -148,7 +148,7 @@ class Simulation:
 
                     
                             
-            increment=50
+            increment=100
             if step%increment==0:
                 for person in self.pedestrians:#>traci.time:
                     if person.depart>step and person.depart<step+increment:
@@ -169,7 +169,7 @@ class Simulation:
             if step%(increment*20)==0:
                 
                 for person in self.pedestrians:
-                    if person.depart<step-800 and person.id in traci.person.getIDList():
+                    if person.depart<step-1000 and person.id in traci.person.getIDList()and traci.person.getVehicle(person.id)=="":
                         distances=[]
                         distances=self.find_closest_bus(bus_list,person,distances)
                         if distances!=[]:
