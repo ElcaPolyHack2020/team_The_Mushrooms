@@ -5,7 +5,7 @@ import random
 import csv
 
 #SUMO_HOME
-os.environ["SUMO_HOME"] = r"C:\Program Files (x86)\Eclipse\Sumo\sumo-git"
+os.environ["SUMO_HOME"] = r"D:\Polyhack"
 
 # Add the traci python library to the tools path
 if 'SUMO_HOME' in os.environ:
@@ -26,19 +26,19 @@ def main():
     # Paramters
 
     # number of simulation step (max. value is 86400 steps = 24 h * 60 min * 60 s)
-    simulation_steps = 10000 #86400
+    simulation_steps = 10000
     # sleep time between 2 simulation step. no sleep is set to 0.0
     sleep_time = 0.00
 
     # seed and scale factor for creating pedestrians
     pedestrians_seed = 30
-    pedestrians_scale_factor = 5.0
+    pedestrians_scale_factor = 3
     pedestrians_until_step = simulation_steps # create pedestrians up until this step
 
     # location of the sumocfg file
-    sumocfg_file = r"C:\Users\arijo\source\repos\trafficmap\aarhus\osm.sumocfg"
+    sumocfg_file = r"..\..\Map\trafficmap\aarhus\osm.sumocfg"
     # location of the XML file containing the city network
-    network_xml_file = r'C:\Users\arijo\source\repos\trafficmap\aarhus\osm.net.xml'
+    network_xml_file = r'..\..\Map\trafficmap\aarhus\osm.net.xml'
 
     # logfiles
     logs_folder = './logs/'
