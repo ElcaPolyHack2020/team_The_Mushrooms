@@ -93,7 +93,7 @@ class Simulation:
 
         # set to small number for faster program
         n_pickup = 4 # Number of passengers to deliver per bus
-        # Warning: do not both set optimize to True and n_pickup to a high number
+        # Warning: do not both set optimize to True and n_pickup to a high number,
         # because then running time is multiplied with (n_pickup)! (n factorial)
         # Recommendation: don't simulate entire day for faster startup
 
