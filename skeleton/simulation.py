@@ -1,13 +1,15 @@
+'''
+The Mushrooms
+Just run this python code
+Code may take a couple min to load at start, but is fast afterwards
+Code is quite refined and readable
+Levels 1-3
+'''
+
 from time import sleep
 import sys
 import traci
 import traci.constants as tc
-
-class bus:
-    def __init__(self, bus_id):
-        self.id = bus_id
-        self.busy = True
-        self.arrived = False
 
 class Simulation:
     def __init__(self, simulation_steps, sleep_time, pedestrians, bus_depot_start_edge, bus_depot_end_edge):
