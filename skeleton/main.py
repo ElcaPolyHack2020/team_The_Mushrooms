@@ -26,13 +26,13 @@ def main():
     # Paramters
 
     # number of simulation step (max. value is 86400 steps = 24 h * 60 min * 60 s)
-    simulation_steps = 10000 #86400
+    simulation_steps = 40000 #86400
     # sleep time between 2 simulation step. no sleep is set to 0.0
     sleep_time = 0.00
 
     # seed and scale factor for creating pedestrians
     pedestrians_seed = 30
-    pedestrians_scale_factor = 5.0
+    pedestrians_scale_factor = 8.0
     pedestrians_until_step = simulation_steps # create pedestrians up until this step
 
     # location of the sumocfg file
