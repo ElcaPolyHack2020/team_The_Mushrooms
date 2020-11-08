@@ -1,6 +1,6 @@
 '''
 The Mushrooms
-Levels 1 bis 3
+Levels 1 to 3
 You may adapt parameters "optimize" and "n_pickup" in run()
 Then you can just run this python code
 Code may take a couple min to load at start, depending on parameter choice,
@@ -14,7 +14,7 @@ from time import sleep
 import sys
 import traci
 import traci.constants as tc
-import itertools # To get permutations for bruteforce traveling salesman for small n
+import itertools # to get permutations for bruteforce traveling salesman for small n
 
 class Simulation:
     def __init__(self, simulation_steps, sleep_time, pedestrians, bus_depot_start_edge, bus_depot_end_edge):
@@ -24,8 +24,8 @@ class Simulation:
         self.bus_depot_start_edge = bus_depot_start_edge
         self.bus_depot_end_edge = bus_depot_end_edge
 
-    # Args: bus id, (list)current route, edge start from, edge go to
-    # Post: Adds edges between e_fr and e_to to bus route 
+    # Args: bus id, (list)current route, edge to start from, edge to go to
+    # Post: Add edges between e_fr and e_to to bus route 
     def append_edges(self, bus_id, cur_rou, e_fr, e_to):
         add_rou = traci.simulation.findRoute(e_fr, e_to).edges    
         if len(cur_rou) != 0:
@@ -33,8 +33,8 @@ class Simulation:
         cur_rou.extend(add_rou)
         traci.vehicle.setRoute(bus_id, cur_rou)
 
-    # Args: bus id, edge to stop at, pos to stop at
-    # Post: Makes bus stop at e_stop, pos_stop
+    # Args: bus id, edge to stop at, position to stop at
+    # Post: Make bus stop at e_stop, pos_stop
     def bus_stop(self, bus_id, e_stop, pos_stop):
         traci.vehicle.setStop(vehID=bus_id, edgeID=e_stop, pos=pos_stop, laneIndex=0, duration=50, flags=tc.STOP_DEFAULT)
 
@@ -46,7 +46,7 @@ class Simulation:
         self.bus_stop(bus_id, p.edge_to, p.position_to)
         
     # Args: bus id, person, last edge from before
-    # Post: adds route to pickup and deliver person as bus route
+    # Post: Add route to pickup and deliver person as bus route
     def add_pers_route(self, bus_id, p, e_before):
         cur_rou = list(traci.vehicle.getRoute(bus_id))
         self.append_edges(bus_id, cur_rou, e_before, p.edge_from)
@@ -54,14 +54,14 @@ class Simulation:
         self.add_route(bus_id, p)
 
     # Args: bus id, person
-    # Post: creates new bus for person and routes it to person pickup + delivery
+    # Post: Create new bus for person and routes it to person pickup + delivery
     def new_bus(self, bus_id, p):
         traci.vehicle.add(vehID=bus_id, typeID="BUS_S", routeID="", depart=p.depart+1.0, departPos=0, departSpeed=0, departLane=0, personCapacity=4)
         traci.vehicle.setRoute(bus_id, [self.bus_depot_start_edge])
         self.add_pers_route(bus_id, p, self.bus_depot_start_edge)
 
     # Args: bus id, edge bus comes from
-    # Post: sends bus to depot
+    # Post: Send bus to depot
     def bye_bus(self, bus_id, e_fr):
         cur_rou = list(traci.vehicle.getRoute(bus_id)) 
         self.append_edges(bus_id, cur_rou, e_fr, self.bus_depot_end_edge)
@@ -83,24 +83,29 @@ class Simulation:
     def bye_bus_len(self, e_fr):
         return traci.simulation.findRoute(e_fr, self.bus_depot_end_edge).travelTime
     
-    # Post: Assigns busses to people and runs simulation
+    # Post: Assign busses to people and runs simulation
     def run(self):
-        # list sorting by depart time, as it's not sorted by default!
+        # Sort list by depart time, as it's not sorted by default!
         self.pedestrians = sorted(self.pedestrians, key = lambda x: x.depart)
-                
+         
+        ############################# Parameters #############################
         # set to False for faster program (still takes some minutes)
         optimize = True # whether to optimize bus routing
 
         # set to small number for faster program
-        n_pickup = 4 # Number of passengers to deliver per bus
+        n_pickup = 4 # number of passengers to deliver per bus
         # Warning: do not both set optimize to True and n_pickup to a high number,
         # because then running time is multiplied with (n_pickup)! (n factorial)
-        # Recommendation: don't simulate entire day for faster startup
+        #
+        # If optimize is False, runtime is quadratic in n_pickup
+        #
+        # In any case startup is faster when reducing simulation_steps
+        ######################################################################
 
         pos = 0
         bus_n = 0
         while pos < len(self.pedestrians):
-            to_id = min(pos + n_pickup, len(self.pedestrians)) # Exclusive
+            to_id = min(pos + n_pickup, len(self.pedestrians)) # exclusive
             bus_id = "bus_" + str(bus_n)
 
             if optimize:
@@ -137,7 +142,7 @@ class Simulation:
                     if p_id == (to_id-pos)-1:
                         self.bye_bus(bus_id, p.edge_to)
 
-            else: # No optimization          
+            else: # no optimization          
                 p = self.pedestrians[int(pos)]
                 self.new_bus(bus_id, p)
                 for p_id in range(pos+1, to_id):              
